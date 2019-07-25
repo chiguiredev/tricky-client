@@ -1,73 +1,61 @@
-import React from 'react';
-import './App.css';
+import React from "react";
+import "./App.css";
+import GamesList from "./components/GamesList";
+import UserList from "./components/UserList";
+import UserControls from "./components/UserControls";
 
-const UserList = ({currentUsers}) => (
-  <div className="current-users">
-    <h3>current users</h3>
-    {Object.keys(currentUsers).map(key => {
-      return (
-        <p key={key}>
-          {`${currentUsers[key].name}:${key}`}
-        </p>
-      );
-    })}
-  </div>
-);
+const initialState = {
+  currentUsers: [],
+  currentGames: [],
+  selfSocketId: ""
+};
 
-const GamesList = ({currentGames, currentUsers}) => (
-  <div className="current-games">
-    <h3>current games</h3>
-    {Object.keys(currentGames).map(key => {
-      return (
-        <p key={key}>
-          {`${currentUsers[currentGames[key].creator].name}:${key}`}
-        </p>
-      );
-    })}
-  </div>
-);
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "UPDATE_USERS":
+      return { ...state, currentUsers: action.payload };
+    case "UPDATE_GAMES":
+      return { ...state, currentGames: action.payload };
+    case "UPDATE_SELF_SOCKET_ID":
+      return { ...state, selfSocketId: action.payload };
+    default:
+      throw new Error("the action type is not defined in the reducer");
+  }
+};
 
-const App = ({socketConnection}) => {
-  const [currentUsers, setCurrentUsers] = React.useState([]);
-  const [currentGames, setCurrentGames] = React.useState([]);
-  const inputElement = React.useRef(null);
+const App = ({ socketConnection }) => {
+  // create the store for the entire app
+  const [state, dispatch] = React.useReducer(reducer, initialState);
 
-  socketConnection.on('connect', () => {
+  // get state from store
+  const { currentUsers, currentGames, selfSocketId } = state;
+
+  // handle incoming messages from server
+  socketConnection.on("connect", () => {
     console.log(`connected: ${socketConnection.id}`);
-    socketConnection.on('user_update', users => {
-      setCurrentUsers(users);
+    dispatch({ type: "UPDATE_SELF_SOCKET_ID", payload: socketConnection.id });
+
+    // Update users on server broadcast
+    socketConnection.on("user_update", users => {
+      dispatch({ type: "UPDATE_USERS", payload: users });
     });
 
-    socketConnection.on('game_update', games => {
-      setCurrentGames(games)
+    // Update games on sever broadcast
+    socketConnection.on("game_update", games => {
+      dispatch({ type: "UPDATE_GAMES", payload: games });
     });
   });
 
-  const handleNameChange = () => {
-    const { value: inputNameValue } = inputElement.current;
-    if (inputNameValue !== '') {
-      socketConnection.emit('name_update', inputNameValue);
-    }
-  };
-
-  const handleCreateGame = () => {
-    socketConnection.emit('create_game');
-  }
-
   return (
-    <div className="App-header">
-      hey im the app
-      <input type="text" placeholder="name" ref={inputElement}/>
-      <button onClick={handleNameChange}>
-        change name
-      </button>
-      <button onClick={handleCreateGame}>
-        create new game
-      </button>
+    <div className="app-main-container">
+      <UserControls
+        socketConnection={socketConnection}
+        selfSocketId={selfSocketId}
+      />
       <UserList currentUsers={currentUsers} />
       <GamesList currentGames={currentGames} currentUsers={currentUsers} />
     </div>
   );
-}
+};
 
 export default App;
