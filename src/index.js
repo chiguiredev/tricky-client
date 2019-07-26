@@ -6,6 +6,7 @@ import * as serviceWorker from './serviceWorker';
 import openSocket from 'socket.io-client';
 
 const socketConnection = (openSocket('http://localhost:8000'));
+
 ReactDOM.render(<App socketConnection={socketConnection} />, document.getElementById('root'));
 
 // If you want your app to work offline and load faster, you can change

@@ -1,19 +1,28 @@
 import React from "react";
+import GameRow from './GameRow';
 
-const GamesList = ({ currentGames, currentUsers }) => (
-  <div className="current-games">
-    <h3>current games</h3>
-    {Object.keys(currentGames).map(key => {
-      return (
-        <div className="game-row" key={key}>
-          <p>{`${currentUsers[currentGames[key].creator].name}: ${key}`}</p>
-          <button>Join Game</button>
-          <button>Delete Game</button>
-          <button>start Game</button>
-        </div>
-      );
-    })}
-  </div>
-);
+const GamesList = ({
+  currentGames,
+  currentUsers,
+  selfSocketId,
+  socketConnection,
+}) => {
+  return (
+    <div className="current-games">
+      <h3>current games</h3>
+      {Object.keys(currentGames).map(key => {
+        return (
+          <GameRow
+            currentGames={currentGames}
+            currentUsers={currentUsers}
+            selfSocketId={selfSocketId}
+            socketConnection={socketConnection}
+            gameKey={key}
+          />
+        );
+      })}
+    </div>
+  );
+};
 
 export default GamesList;
