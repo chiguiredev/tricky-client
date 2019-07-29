@@ -7,6 +7,7 @@ import UserControls from "./components/UserControls";
 const initialState = {
   currentUsers: [],
   currentGames: [],
+  num: 0,
   selfSocketId: ""
 };
 
@@ -21,6 +22,11 @@ const reducer = (state, action) => {
       return {
         ...state,
         currentGames: action.payload
+      };
+    case "UPDATE_NUM":
+      return {
+        ...state,
+        num: action.payload
       };
     case "UPDATE_SELF_SOCKET_ID":
       return {
@@ -40,6 +46,7 @@ const App = ({ socketConnection }) => {
   const {
     currentUsers,
     currentGames,
+    num,
     selfSocketId
   } = state;
 
@@ -51,6 +58,14 @@ const App = ({ socketConnection }) => {
     dispatch({
       type: "UPDATE_SELF_SOCKET_ID",
       payload: socketConnection.id
+    });
+
+    // Update num on server
+    socketConnection.on("num_update", num => {
+      dispatch({
+        type: "UPDATE_NUM",
+        payload: num
+      });
     });
 
     // Update users on server broadcast
@@ -70,7 +85,16 @@ const App = ({ socketConnection }) => {
     });
   });
 
+  const handleClickSum = ()=> {
+    socketConnection.emit('num_update');
+  };
+
   return (
+    <div>
+      <div className="num-container">
+      <div className='num'>{num}</div>
+      <button className="button-num" onClick={handleClickSum}>SUM</button>
+      </div>
     <div className="app-main-container">
       <UserControls
         socketConnection={socketConnection}
@@ -84,6 +108,7 @@ const App = ({ socketConnection }) => {
         socketConnection={socketConnection}
       />
     </div>
+    </div> 
   );
 };
 
